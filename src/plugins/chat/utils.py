@@ -270,11 +270,13 @@ def split_into_sentences_w_remove_punctuation(text: str) -> List[str]:
                 letter = ''
         text_no_1 += letter
 
+
     # 对每个逗号单独判断是否分割
     sentences = [text_no_1]
     new_sentences = []
     for sentence in sentences:
-        parts = sentence.split('，')
+        # 按逗号和分号分割文本
+        parts = [p2 for p1 in sentence.split('；') for p2 in p1.split('，')]
         current_sentence = parts[0]
         for part in parts[1:]:
             if random.random() < split_strength:
@@ -283,12 +285,20 @@ def split_into_sentences_w_remove_punctuation(text: str) -> List[str]:
             else:
                 current_sentence += '，' + part
         # 处理空格分割
-        space_parts = current_sentence.split(' ')
+        # space_parts = current_sentence.split(' ') # 原文代码
+        space_parts = re.split(r'(?<![a-zA-Z]) (?![a-zA-Z])', current_sentence)  # 仅分割非字母周围空格
         current_sentence = space_parts[0]
         for part in space_parts[1:]:
             if random.random() < split_strength:
-                new_sentences.append(current_sentence.strip())
-                current_sentence = part
+                # 下述为原文代码
+                # new_sentences.append(current_sentence.strip())
+                # current_sentence = part
+                # 检查是否为英文单词间空格
+                if re.match(r'^[a-zA-Z]+$', current_sentence) and re.match(r'^[a-zA-Z]+$', part):
+                    current_sentence += ' ' + part  # 保留英文单词间空格
+                else:
+                    new_sentences.append(current_sentence.strip())
+                    current_sentence = part
             else:
                 current_sentence += ' ' + part
         new_sentences.append(current_sentence.strip())
@@ -337,6 +347,15 @@ def random_remove_punctuation(text: str) -> str:
 
 
 def process_llm_response(text: str) -> List[str]:
+    # 检查句子中是否包含"确实"，如果包含则替换掉
+    # 检查是否只包含"确实"两个字
+    if text.strip() == "确实":
+        return ["确实"]
+    # 检查句子中是否包含"确实"，如果包含则替换掉
+    elif "确实" in text:
+        text = text.replace("确实", "真的")
+
+
     # processed_response = process_text_with_typos(content)
     if len(text) > 100:
         logger.warning(f"回复过长 ({len(text)} 字符)，返回默认回复")
@@ -360,9 +379,12 @@ def process_llm_response(text: str) -> List[str]:
             sentences.append(sentence)
     # 检查分割后的消息数量是否过多（超过3条）
 
-    if len(sentences) > 3:
+    if len(sentences) > 5:
         logger.warning(f"分割后消息数量过多 ({len(sentences)} 条)，返回默认回复")
-        return [f'{global_config.BOT_NICKNAME}不知道哦']
+        return [f'不知道哦']
+
+
+
 
     return sentences
 

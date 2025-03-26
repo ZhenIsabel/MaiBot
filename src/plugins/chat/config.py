@@ -35,6 +35,7 @@ class BotConfig:
     thinking_timeout: int = 100  # 思考时间
 
     response_willing_amplifier: float = 1.0  # 回复意愿放大系数
+    response_private_willing_amplifier:float=1.0 #私聊回复意愿放大系数
     response_interested_rate_amplifier: float = 1.0  # 回复兴趣度放大系数
     down_frequency_rate: float = 3.5  # 降低回复频率的群组回复意愿降低系数
 
@@ -293,6 +294,9 @@ class BotConfig:
                 config.thinking_timeout = msg_config.get("thinking_timeout", config.thinking_timeout)
                 config.response_willing_amplifier = msg_config.get(
                     "response_willing_amplifier", config.response_willing_amplifier
+                )
+                config.response_private_willing_amplifier=msg_config.get(
+                    "response_private_willing_amplifier", config.response_private_willing_amplifier
                 )
                 config.response_interested_rate_amplifier = msg_config.get(
                     "response_interested_rate_amplifier", config.response_interested_rate_amplifier
