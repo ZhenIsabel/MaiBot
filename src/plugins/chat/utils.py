@@ -401,14 +401,9 @@ def process_llm_response(text: str) -> List[str]:
             sentences.append(sentence)
     # 检查分割后的消息数量是否过多（超过3条）
 
-    if len(sentences) > 5:
     if len(sentences) > max_sentence_num:
         logger.warning(f"分割后消息数量过多 ({len(sentences)} 条)，返回默认回复")
         return [f'不知道哦']
-
-
-
-        return [f"{global_config.BOT_NICKNAME}不知道哦"]
 
     return sentences
 
