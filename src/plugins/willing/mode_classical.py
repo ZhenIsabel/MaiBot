@@ -94,7 +94,7 @@ class WillingManager:
             chat_id = chat_stream.stream_id
             current_willing = self.chat_reply_willing.get(chat_id, 0)
             if current_willing < 1:
-                self.chat_reply_willing[chat_id] = min(1, current_willing + 0.4)
+                self.chat_reply_willing[chat_id] = min(1, current_willing + 0.2)
 
     async def ensure_started(self):
         """确保衰减任务已启动"""
