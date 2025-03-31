@@ -2,7 +2,6 @@ import random
 import time
 from typing import List, Optional, Tuple, Union
 
-from nonebot import get_driver
 
 from ...common.database import db
 from ..models.utils_model import LLM_request
@@ -21,25 +20,20 @@ llm_config = LogConfig(
 
 logger = get_module_logger("llm_generator", config=llm_config)
 
-driver = get_driver()
-config = driver.config
-
 
 class ResponseGenerator:
     def __init__(self):
-        self.model_r1 = LLM_request(
+        self.model_reasoning = LLM_request(
             model=global_config.llm_reasoning,
             temperature=0.7,
             max_tokens=1000,
             stream=True,
             request_type="response",
         )
-        self.model_v3 = LLM_request(
+        self.model_normal = LLM_request(
             model=global_config.llm_normal, temperature=0.7, max_tokens=3000, request_type="response"
         )
-        self.model_r1_distill = LLM_request(
-            model=global_config.llm_reasoning_minor, temperature=0.7, max_tokens=3000, request_type="response"
-        )
+
         self.model_sum = LLM_request(
             model=global_config.llm_summary_by_topic, temperature=0.7, max_tokens=3000, request_type="relation"
         )
@@ -49,34 +43,31 @@ class ResponseGenerator:
     async def generate_response(self, message: MessageThinking) -> Optional[Union[str, List[str]]]:
         """根据当前模型类型选择对应的生成函数"""
         # 从global_config中获取模型概率值并选择模型
-        rand = random.random()
-        if rand < global_config.MODEL_R1_PROBABILITY:
+        if random.random() < global_config.MODEL_R1_PROBABILITY:
             self.current_model_type = "深深地"
-            current_model = self.model_r1
-        elif rand < global_config.MODEL_R1_PROBABILITY + global_config.MODEL_V3_PROBABILITY:
-            self.current_model_type = "浅浅的"
-            current_model = self.model_v3
+            current_model = self.model_reasoning
         else:
-            self.current_model_type = "又浅又浅的"
-            current_model = self.model_r1_distill
+            self.current_model_type = "浅浅的"
+            current_model = self.model_normal
 
-        logger.info(f"{global_config.BOT_NICKNAME}{self.current_model_type}思考中")
+        logger.info(
+            f"{self.current_model_type}思考:{message.processed_plain_text[:30] + '...' if len(message.processed_plain_text) > 30 else message.processed_plain_text}"
+        )  # noqa: E501
 
         model_response = await self._generate_response_with_model(message, current_model)
-        raw_content = model_response
 
-        # print(f"raw_content: {raw_content}")
-        # print(f"model_response: {model_response}")
+        print(f"raw_content: {model_response}")
 
         if model_response:
             logger.info(f"{global_config.BOT_NICKNAME}的回复是：{model_response}")
             model_response = await self._process_response(model_response)
-            if model_response:
-                return model_response, raw_content
-        return None, raw_content
 
-    async def _generate_response_with_model(self, message: MessageThinking, model: LLM_request) -> Optional[str]:
-        """使用指定的模型生成回复"""
+            return model_response
+        else:
+            logger.info(f"{self.current_model_type}思考，失败")
+            return None
+
+    async def _generate_response_with_model(self, message: MessageThinking, model: LLM_request):
         sender_name = ""
         if message.chat_stream.user_info.user_cardname and message.chat_stream.user_info.user_nickname:
             sender_name = (
@@ -88,13 +79,18 @@ class ResponseGenerator:
         else:
             sender_name = f"用户({message.chat_stream.user_info.user_id})"
 
+        logger.debug("开始使用生成回复-2")
         # 构建prompt
-        prompt, prompt_check = await prompt_builder._build_prompt(
+        timer1 = time.time()
+        prompt = await prompt_builder._build_prompt(
             message.chat_stream,
             message_txt=message.processed_plain_text,
             sender_name=sender_name,
             stream_id=message.chat_stream.stream_id,
         )
+        timer2 = time.time()
+        logger.info(f"构建prompt时间: {timer2 - timer1}秒")
+
         try:
             content, reasoning_content, self.current_model_name = await model.generate_response(prompt)
         except Exception:
@@ -106,19 +102,20 @@ class ResponseGenerator:
             message=message,
             sender_name=sender_name,
             prompt=prompt,
-            prompt_check=prompt_check,
             content=content,
             reasoning_content=reasoning_content,
+            # reasoning_content_check=reasoning_content_check if global_config.enable_kuuki_read else ""
         )
 
         return content
 
+    # def _save_to_db(self, message: Message, sender_name: str, prompt: str, prompt_check: str,
+    #                 content: str, content_check: str, reasoning_content: str, reasoning_content_check: str):
     def _save_to_db(
         self,
         message: MessageRecv,
         sender_name: str,
         prompt: str,
-        prompt_check: str,
         content: str,
         reasoning_content: str,
     ):
@@ -135,7 +132,6 @@ class ResponseGenerator:
                 "reasoning": reasoning_content,
                 "response": content,
                 "prompt": prompt,
-                "prompt_check": prompt_check,
             }
         )
 

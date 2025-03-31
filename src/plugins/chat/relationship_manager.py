@@ -3,7 +3,7 @@ from typing import Optional
 from src.common.logger import get_module_logger, LogConfig, RELATION_STYLE_CONFIG
 
 from ...common.database import db
-from .message_base import UserInfo
+from ..message.message_base import UserInfo
 from .chat_stream import ChatStream
 import math
 from bson.decimal128 import Decimal128
@@ -128,7 +128,8 @@ class RelationshipManager:
                             else:
                                 relationship.relationship_value = float(relationship.relationship_value)
                             logger.info(
-                                f"[关系管理] 用户 {user_id}({platform}) 的关系值已转换为double类型: {relationship.relationship_value}")  # noqa: E501
+                                f"[关系管理] 用户 {user_id}({platform}) 的关系值已转换为double类型: {relationship.relationship_value}"
+                            )  # noqa: E501
                         except (ValueError, TypeError):
                             # 如果不能解析/强转则将relationship.relationship_value设置为double类型的0
                             relationship.relationship_value = 0.0
@@ -169,7 +170,7 @@ class RelationshipManager:
         if key in self.relationships:
             return self.relationships[key]
         else:
-            return 0
+            return None
 
     async def load_relationship(self, data: dict) -> Relationship:
         """从数据库加载或创建新的关系对象"""
@@ -326,7 +327,7 @@ class RelationshipManager:
             else:
                 value = 0
 
-        level_num = self.calculate_level_num(old_value+value)
+        level_num = self.calculate_level_num(old_value + value)
         relationship_level = ["厌恶", "冷漠", "一般", "友好", "喜欢", "暧昧"]
         logger.info(
             f"当前关系: {relationship_level[level_num]}, "
@@ -359,7 +360,7 @@ class RelationshipManager:
                 f"你对昵称为'({person.user_info.user_id}){person.user_info.user_nickname}'的用户的态度为{relationship_level[level_num]}，"
                 f"回复态度为{relation_prompt2_list[level_num]}，关系等级为{level_num}。"
             )
-        
+
     def calculate_level_num(self, relationship_value) -> int:
         """关系等级计算"""
         if -1000 <= relationship_value < -227:

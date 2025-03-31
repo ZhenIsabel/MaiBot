@@ -20,7 +20,7 @@ import sys
 """
 current_dir = Path(__file__).resolve().parent
 project_root = current_dir.parent.parent.parent
-env_path = project_root / ".env.prod"
+env_path = project_root / ".env"
 
 root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(root_path)
@@ -81,7 +81,6 @@ class PersonalityEvaluator_direct:
                 dimension_descriptions.append(f"- {dim}：{desc}")
 
         dimensions_text = "\n".join(dimension_descriptions)
-
 
         prompt = f"""请根据以下场景和用户描述，评估用户在大五人格模型中的相关维度得分（1-6分）。
 

@@ -6,7 +6,6 @@ from typing import Optional
 from PIL import Image
 import io
 
-from nonebot import get_driver
 
 from ...common.database import db
 from ..config.config import global_config
@@ -15,9 +14,6 @@ from ..models.utils_model import LLM_request
 from src.common.logger import get_module_logger
 
 logger = get_module_logger("chat_image")
-
-driver = get_driver()
-config = driver.config
 
 
 class ImageManager:
@@ -170,7 +166,7 @@ class ImageManager:
             # 查询缓存的描述
             cached_description = self._get_description_from_db(image_hash, "image")
             if cached_description:
-                logger.debug(f"图片描述缓存中 {cached_description}")
+                logger.info(f"图片描述缓存中 {cached_description}")
                 return f"[图片：{cached_description}]"
 
             # 调用AI获取描述

@@ -9,10 +9,9 @@ from src.common.logger import get_module_logger
 import base64
 from PIL import Image
 import io
+import os
 from ...common.database import db
 from ..config.config import global_config
-from ..config.config_env import env_config
-
 
 logger = get_module_logger("model_utils")
 
@@ -32,9 +31,8 @@ class LLM_request:
     def __init__(self, model, **kwargs):
         # 将大写的配置键转换为小写并从config中获取实际值
         try:
-            self.api_key = getattr(env_config, model["key"])
-            self.base_url = getattr(env_config, model["base_url"])
-            # print(self.api_key, self.base_url)
+            self.api_key = os.environ[model["key"]]
+            self.base_url = os.environ[model["base_url"]]
         except AttributeError as e:
             logger.error(f"原始 model dict 信息：{model}")
             logger.error(f"配置错误：找不到对应的配置项 - {str(e)}")
@@ -42,6 +40,7 @@ class LLM_request:
         self.model_name = model["name"]
         self.params = kwargs
 
+        self.stream = model.get("stream", False)
         self.pri_in = model.get("pri_in", 0)
         self.pri_out = model.get("pri_out", 0)
 
@@ -164,7 +163,7 @@ class LLM_request:
         # 常见Error Code Mapping
         error_code_mapping = {
             400: "参数不正确",
-            401: "API key 错误，认证失败，请检查/config/bot_config.toml和.env.prod中的配置是否正确哦~",
+            401: "API key 错误，认证失败，请检查/config/bot_config.toml和.env中的配置是否正确哦~",
             402: "账号余额不足",
             403: "需要实名,或余额不足",
             404: "Not Found",
@@ -175,10 +174,14 @@ class LLM_request:
 
         api_url = f"{self.base_url.rstrip('/')}/{endpoint.lstrip('/')}"
         # 判断是否为流式
-        stream_mode = self.params.get("stream", False)
+        stream_mode = self.stream
         # logger_msg = "进入流式输出模式，" if stream_mode else ""
         # logger.debug(f"{logger_msg}发送请求到URL: {api_url}")
         # logger.info(f"使用模型: {self.model_name}")
+
+        # 流式输出标志
+        if stream_mode:
+            payload["stream"] = stream_mode
 
         # 构建请求体
         if image_base64:

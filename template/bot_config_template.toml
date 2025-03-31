@@ -1,5 +1,5 @@
 [inner]
-version = "0.0.11"
+version = "1.0.1"
 
 [mai_version]
 version = "0.6.0"
@@ -16,6 +16,12 @@ version-fix = "snapshot-2"
 #2.如果你修改的是[]下的项目，例如你新增了[memory]下的 memory_ban_words ,那么请在config.py的 load_config函数中的 memory函数下新增版本判断:
             # if config.INNER_VERSION in SpecifierSet(">=0.0.2"):
             #     config.memory_ban_words = set(memory_config.get("memory_ban_words", []))
+
+# 版本格式：主版本号.次版本号.修订号，版本号递增规则如下：
+#     主版本号：当你做了不兼容的 API 修改，
+#     次版本号：当你做了向下兼容的功能性新增，
+#     修订号：当你做了向下兼容的问题修正。
+# 先行版本号及版本编译信息可以加到“主版本号.次版本号.修订号”的后面，作为延伸。
 
 [bot]
 qq = 114514
@@ -44,6 +50,10 @@ personality_3_probability = 0.1 # 第三种人格出现概率，请确保三个�
 enable_schedule_gen = true # 是否启用日程表(尚未完成)
 prompt_schedule_gen = "用几句话描述描述性格特点或行动规律，这个特征会用来生成日程表"
 schedule_doing_update_interval = 900 # 日程表更新间隔 单位秒
+
+[platforms] # 必填项目，填写每个平台适配器提供的链接
+qq="http://127.0.0.1:18002/api/message"
+
 
 [message]
 max_context_size = 15 # 麦麦获得的上文数量，建议15，太短太长都会导致脑袋尖尖
@@ -136,8 +146,14 @@ enable_friend_chat = false # 是否启用好友聊天
 enable_think_flow = false # 是否启用思维流 注意：可能会消耗大量token，请谨慎开启
 #思维流适合搭配低能耗普通模型使用，例如qwen2.5 32b
 
-#下面的模型若使用硅基流动则不需要更改，使用ds官方则改成.env.prod自定义的宏，使用自定义模型则选择定位相似的模型自己填写
+#下面的模型若使用硅基流动则不需要更改，使用ds官方则改成.env自定义的宏，使用自定义模型则选择定位相似的模型自己填写
 #推理模型
+
+# 额外字段
+# 下面的模型有以下额外字段可以添加：
+
+# stream = <true|false> : 用于指定模型是否是使用流式输出
+# 如果不指定，则该项是 False
 
 [model.llm_reasoning] #回复模型1 主要回复模型
 name = "Pro/deepseek-ai/DeepSeek-R1"
@@ -197,6 +213,8 @@ pri_out = 0.35
 [model.embedding] #嵌入
 name = "BAAI/bge-m3"
 provider = "SILICONFLOW"
+pri_in = 0
+pri_out = 0
 
 #测试模型，给think_glow用，如果你没开实验性功能，随便写就行，但是要有
 [model.llm_outer_world] #外世界判断：建议使用qwen2.5 7b

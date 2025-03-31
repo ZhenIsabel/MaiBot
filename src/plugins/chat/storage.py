@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Union
 
 from ...common.database import db
 from .message import MessageSending, MessageRecv
@@ -9,9 +9,7 @@ logger = get_module_logger("message_storage")
 
 
 class MessageStorage:
-    async def store_message(
-        self, message: Union[MessageSending, MessageRecv], chat_stream: ChatStream, topic: Optional[str] = None
-    ) -> None:
+    async def store_message(self, message: Union[MessageSending, MessageRecv], chat_stream: ChatStream) -> None:
         """存储消息到数据库"""
         try:
             message_data = {
@@ -22,7 +20,6 @@ class MessageStorage:
                 "user_info": message.message_info.user_info.to_dict(),
                 "processed_plain_text": message.processed_plain_text,
                 "detailed_plain_text": message.detailed_plain_text,
-                "topic": topic,
                 "memorized_times": message.memorized_times,
             }
             db.messages.insert_one(message_data)

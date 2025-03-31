@@ -6,7 +6,7 @@ from typing import Dict, Optional
 
 
 from ...common.database import db
-from .message_base import GroupInfo, UserInfo
+from ..message.message_base import GroupInfo, UserInfo
 
 from src.common.logger import get_module_logger
 
@@ -47,8 +47,8 @@ class ChatStream:
     @classmethod
     def from_dict(cls, data: dict) -> "ChatStream":
         """从字典创建实例"""
-        user_info = UserInfo(**data.get("user_info", {})) if data.get("user_info") else None
-        group_info = GroupInfo(**data.get("group_info", {})) if data.get("group_info") else None
+        user_info = UserInfo.from_dict(data.get("user_info", {})) if data.get("user_info") else None
+        group_info = GroupInfo.from_dict(data.get("group_info", {})) if data.get("group_info") else None
 
         return cls(
             stream_id=data["stream_id"],
@@ -143,12 +143,12 @@ class ChatManager:
         if stream_id in self.streams:
             stream = self.streams[stream_id]
             # 更新用户信息和群组信息
+            stream.update_active_time()
+            stream = copy.deepcopy(stream)
             stream.user_info = user_info
             if group_info:
                 stream.group_info = group_info
-            stream.update_active_time()
-            await self._save_stream(stream)  # 先保存更改
-            return copy.deepcopy(stream)  # 然后返回副本
+            return stream
 
         # 检查数据库中是否存在
         data = db.chat_streams.find_one({"stream_id": stream_id})
