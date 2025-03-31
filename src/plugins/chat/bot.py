@@ -37,6 +37,8 @@ from src.think_flow_demo.outer_world import outer_world
 
 from src.common.logger import get_module_logger, CHAT_STYLE_CONFIG, LogConfig
 
+from src.plugins.chat.voice_manager import VoiceManager  # 导入语音管理器
+
 # 定义日志配置
 chat_config = LogConfig(
     # 使用消息发送专用样式
@@ -227,37 +229,48 @@ class ChatBot:
             # accu_typing_time = 0
 
             mark_head = False
-            for msg in response:
-                # print(f"\033[1;32m[回复内容]\033[0m {msg}")
-                # 通过时间改变时间戳
-                # typing_time = calculate_typing_time(msg)
-                # logger.debug(f"typing_time: {typing_time}")
-                # accu_typing_time += typing_time
-                # timepoint = thinking_time_point + accu_typing_time
-                message_segment = Seg(type="text", data=msg)
-                # logger.debug(f"message_segment: {message_segment}")
-                bot_message = MessageSending(
-                    message_id=think_id,
-                    chat_stream=chat,
-                    bot_user_info=bot_user_info,
-                    sender_info=userinfo,
-                    message_segment=message_segment,
-                    reply=message,
-                    is_head=not mark_head,
-                    is_emoji=False,
-                    thinking_start_time=thinking_start_time,
-                )
-                if not mark_head:
-                    mark_head = True
-                message_set.add_message(bot_message)
-                if len(str(bot_message)) < 1000:
-                    logger.debug(f"bot_message: {bot_message}")
-                    logger.debug(f"添加消息到message_set: {bot_message}")
-                else:
-                    logger.debug(f"bot_message: {str(bot_message)[:1000]}...{str(bot_message)[-10:]}")
-                    logger.debug(f"添加消息到message_set: {str(bot_message)[:1000]}...{str(bot_message)[-10:]}")
-            # message_set 可以直接加入 message_manager
-            # print(f"\033[1;32m[回复]\033[0m 将回复载入发送容器")
+
+            # 添加随机语音发送逻辑
+            should_send_voice = random() < 0.01  # 40%概率发送语音
+            if should_send_voice:
+                voice=VoiceManager()
+                message_full="，".join(response)
+                voice_path=voice.generate_voice(message_full)
+                voice_message=voice.generate_voice_message(voice_path,think_id,chat,bot_user_info,userinfo,thinking_start_time)
+                message_set.add_message(voice_message)
+                logger.debug(f"添加语音消息到message_set: {message_full}")
+            else:
+                for msg in response:
+                    # print(f"\033[1;32m[回复内容]\033[0m {msg}")
+                    # 通过时间改变时间戳
+                    # typing_time = calculate_typing_time(msg)
+                    # logger.debug(f"typing_time: {typing_time}")
+                    # accu_typing_time += typing_time
+                    # timepoint = thinking_time_point + accu_typing_time
+                    message_segment = Seg(type="text", data=msg)
+                    # logger.debug(f"message_segment: {message_segment}")
+                    bot_message = MessageSending(
+                        message_id=think_id,
+                        chat_stream=chat,
+                        bot_user_info=bot_user_info,
+                        sender_info=userinfo,
+                        message_segment=message_segment,
+                        reply=message,
+                        is_head=not mark_head,
+                        is_emoji=False,
+                        thinking_start_time=thinking_start_time,
+                    )
+                    if not mark_head:
+                        mark_head = True
+                    message_set.add_message(bot_message)
+                    if len(str(bot_message)) < 1000:
+                        logger.debug(f"bot_message: {bot_message}")
+                        logger.debug(f"添加消息到message_set: {bot_message}")
+                    else:
+                        logger.debug(f"bot_message: {str(bot_message)[:1000]}...{str(bot_message)[-10:]}")
+                        logger.debug(f"添加消息到message_set: {str(bot_message)[:1000]}...{str(bot_message)[-10:]}")
+                # message_set 可以直接加入 message_manager
+                # print(f"\033[1;32m[回复]\033[0m 将回复载入发送容器")
 
             logger.debug("添加message_set到message_manager")
 
