@@ -54,8 +54,14 @@ class WillingManager:
             current_willing *= global_config.emoji_response_penalty
 
         self.chat_reply_willing[chat_id] = min(current_willing, 3.0)
-
-        reply_probability = min(max((current_willing - 0.5), 0.01) * config.response_willing_amplifier * 2, 1)
+        
+        # 设置回复意愿放大器
+        # 私聊消息处理
+        if not chat_stream.group_info:
+            reply_probability = min(max((current_willing - 0.5),0.03)* config.response_private_willing_amplifier * 2,1)
+        # 群聊消息处理
+        else:
+            reply_probability = min(max((current_willing - 0.5),0.03)* config.response_willing_amplifier * 2,1)
 
         # 检查群组权限（如果是群聊）
         if chat_stream.group_info and config:
@@ -88,7 +94,7 @@ class WillingManager:
             chat_id = chat_stream.stream_id
             current_willing = self.chat_reply_willing.get(chat_id, 0)
             if current_willing < 1:
-                self.chat_reply_willing[chat_id] = min(1, current_willing + 0.4)
+                self.chat_reply_willing[chat_id] = min(1, current_willing + 0.2)
 
     async def ensure_started(self):
         """确保衰减任务已启动"""

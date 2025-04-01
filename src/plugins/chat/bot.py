@@ -22,6 +22,8 @@ from ..message import UserInfo, Seg
 from src.heart_flow.heartflow import heartflow
 from src.common.logger import get_module_logger, CHAT_STYLE_CONFIG, LogConfig
 
+from src.plugins.chat.voice_manager import VoiceManager  # 导入语音管理器
+
 # 定义日志配置
 chat_config = LogConfig(
     # 使用消息发送专用样式
@@ -235,28 +237,38 @@ class ChatBot:
         message_set = MessageSet(chat, thinking_id)
 
         mark_head = False
-        for msg in response_set:
-            message_segment = Seg(type="text", data=msg)
-            bot_message = MessageSending(
-                message_id=thinking_id,
-                chat_stream=chat,
-                bot_user_info=UserInfo(
-                    user_id=global_config.BOT_QQ,
-                    user_nickname=global_config.BOT_NICKNAME,
-                    platform=message.message_info.platform,
-                ),
-                sender_info=message.message_info.user_info,
-                message_segment=message_segment,
-                reply=message,
-                is_head=not mark_head,
-                is_emoji=False,
-                thinking_start_time=thinking_start_time,
-            )
-            if not mark_head:
-                mark_head = True
-            message_set.add_message(bot_message)
-        # logger.info(f"开始添加发送消息")
-        message_manager.add_message(message_set)
+        # 添加随机语音发送逻辑
+        should_send_voice = random() < 0.01  # 40%概率发送语音
+        if should_send_voice:
+            voice=VoiceManager()
+            message_full="，".join(response)
+            voice_path=voice.generate_voice(message_full)
+            voice_message=voice.generate_voice_message(voice_path,think_id,chat,bot_user_info,userinfo,thinking_start_time)
+            message_set.add_message(voice_message)
+            logger.debug(f"添加语音消息到message_set: {message_full}")
+        else:
+            for msg in response_set:
+                message_segment = Seg(type="text", data=msg)
+                bot_message = MessageSending(
+                    message_id=thinking_id,
+                    chat_stream=chat,
+                    bot_user_info=UserInfo(
+                        user_id=global_config.BOT_QQ,
+                        user_nickname=global_config.BOT_NICKNAME,
+                        platform=message.message_info.platform,
+                    ),
+                    sender_info=message.message_info.user_info,
+                    message_segment=message_segment,
+                    reply=message,
+                    is_head=not mark_head,
+                    is_emoji=False,
+                    thinking_start_time=thinking_start_time,
+                )
+                if not mark_head:
+                    mark_head = True
+                message_set.add_message(bot_message)
+            # logger.info(f"开始添加发送消息")
+            message_manager.add_message(message_set)
 
     async def _handle_emoji(self, message, chat, response):
         """处理表情包

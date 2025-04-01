@@ -141,7 +141,7 @@ class MessageAnalyzer:
 if __name__ == "__main__":
     # 测试代码
     analyzer = MessageAnalyzer()
-    test_qq = "1026294844"  # 替换为要测试的QQ号
+    test_qq = "1260140989"  # 替换为要测试的QQ号
     print(f"测试QQ号: {test_qq}")
     print("-" * 50)
     # 获取5条消息，每条消息前后各3条上下文

@@ -169,6 +169,7 @@ class BotConfig:
     # willing
     willing_mode: str = "classical"  # 意愿模式
     response_willing_amplifier: float = 1.0  # 回复意愿放大系数
+    response_private_willing_amplifier:float=1.0 #私聊回复意愿放大系数
     response_interested_rate_amplifier: float = 1.0  # 回复兴趣度放大系数
     down_frequency_rate: float = 3  # 降低回复频率的群组回复意愿降低系数
     emoji_response_penalty: float = 0.0  # 表情包回复惩罚
@@ -469,6 +470,9 @@ class BotConfig:
             config.response_willing_amplifier = msg_config.get(
                 "response_willing_amplifier", config.response_willing_amplifier
             )
+                config.response_private_willing_amplifier=msg_config.get(
+                    "response_private_willing_amplifier", config.response_private_willing_amplifier
+                )
             config.response_interested_rate_amplifier = msg_config.get(
                 "response_interested_rate_amplifier", config.response_interested_rate_amplifier
             )

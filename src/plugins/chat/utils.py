@@ -222,11 +222,13 @@ def split_into_sentences_w_remove_punctuation(text: str) -> List[str]:
                 letter = ""
         text_no_1 += letter
 
+
     # 对每个逗号单独判断是否分割
     sentences = [text_no_1]
     new_sentences = []
     for sentence in sentences:
-        parts = sentence.split("，")
+        # 按逗号和分号分割文本
+        parts = [p2 for p1 in sentence.split('；') for p2 in p1.split('，')]
         current_sentence = parts[0]
         if not is_western_paragraph(current_sentence):
             for part in parts[1:]:
@@ -299,6 +301,15 @@ def random_remove_punctuation(text: str) -> str:
 
 
 def process_llm_response(text: str) -> List[str]:
+    # 检查句子中是否包含"确实"，如果包含则替换掉
+    # 检查是否只包含"确实"两个字
+    if text.strip() == "确实":
+        return ["确实"]
+    # 检查句子中是否包含"确实"，如果包含则替换掉
+    elif "确实" in text:
+        text = text.replace("确实", "真的")
+
+
     # processed_response = process_text_with_typos(content)
     # 对西文字符段落的回复长度设置为汉字字符的两倍
     max_length = global_config.response_max_length
@@ -333,7 +344,7 @@ def process_llm_response(text: str) -> List[str]:
 
     if len(sentences) > max_sentence_num:
         logger.warning(f"分割后消息数量过多 ({len(sentences)} 条)，返回默认回复")
-        return [f"{global_config.BOT_NICKNAME}不知道哦"]
+        return [f'不知道哦']
 
     return sentences
 
