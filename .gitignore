@@ -223,6 +223,8 @@ logs
 
 .ruff_cache
 
+.out
+
 .vscode
 
 /config/*
