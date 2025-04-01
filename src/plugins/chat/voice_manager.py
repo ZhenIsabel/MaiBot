@@ -4,7 +4,7 @@ import requests
 
 from src.common.logger import get_module_logger
 from src.plugins.chat.message import MessageSending
-from src.plugins.chat.message_base import Seg
+from ..message.message_base import Seg
 
 logger = get_module_logger("chat_voice") 
 

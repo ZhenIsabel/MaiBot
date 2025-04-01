@@ -470,9 +470,9 @@ class BotConfig:
             config.response_willing_amplifier = msg_config.get(
                 "response_willing_amplifier", config.response_willing_amplifier
             )
-                config.response_private_willing_amplifier=msg_config.get(
-                    "response_private_willing_amplifier", config.response_private_willing_amplifier
-                )
+            config.response_private_willing_amplifier=msg_config.get(
+                "response_private_willing_amplifier", config.response_private_willing_amplifier
+            )
             config.response_interested_rate_amplifier = msg_config.get(
                 "response_interested_rate_amplifier", config.response_interested_rate_amplifier
             )
